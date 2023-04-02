@@ -5,10 +5,13 @@ from decouple import config
 MODE = "DEVELOPMENT"
 
 # Close all open positions and orders
-ABORT_ALL_POSITIONS = False
+ABORT_ALL_POSITIONS = True
 
 # Find Cointegrated Pairs
-FIND_COINTEGRATED = True
+FIND_COINTEGRATED = False
+
+# Manage exits
+MANAGE_EXITS = True
 
 # Place Trades 
 PLACE_TRADES = True
@@ -27,6 +30,9 @@ USD_MIN_COLLATERAL = 1880
 
 # Thresholds - Closing
 CLOSE_AT_ZCORE_CROSS = True
+
+# List of coins where order amount must be a factor of 10
+TOKEN_FACTOR_10 = ["XLM-USD","DOGE-USD","TRX-USD"]
 
 # Ethereum Address (WALLET PUBLIC KEY)
 ETHEREUM_ADDRESS = "0xFe640828ef37684c7B2Ee438450c7aD703aaB997"
