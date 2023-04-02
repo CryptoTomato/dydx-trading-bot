@@ -152,7 +152,7 @@ def open_positions(client):
                             print("---")
                         
     # Save agents
-    print(f"Success: {len(bot_agents)} New Pairs LIVE")
+    print(f"Success: Manage open trades checked")
     if len(bot_agents) > 0:
         with open("bot_agents.json", "w") as f:
             json.dump(bot_agents, f)
