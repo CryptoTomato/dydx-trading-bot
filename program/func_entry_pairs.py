@@ -69,7 +69,7 @@ def open_positions(client):
                     base_side = "BUY" if z_score < 0 else "SELL"
                     quote_side = "BUY" if z_score > 0 else "SELL"
 
-                    # Get acceptable pirce in string format with correct number of decimals
+                    # Get acceptable price in string format with correct number of decimals
                     base_price = series_1[-1]
                     quote_price = series_2[-1]
                     accept_base_price = float(base_price) * 1.01 if z_score < 0 else float(base_price) * 0.99
