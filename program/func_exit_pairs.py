@@ -1,10 +1,12 @@
-from constants import CLOSE_AT_ZCORE_CROSS
+from constants import CLOSE_AT_ZCORE_CROSS, STOP_LOSS, TAKE_PROFIT
 from func_utils import format_number
 from func_public import get_candles_recent
-from func_cointegration import calculate_zcore
+from func_cointegration import calculate_zscore
 from func_private import place_market_order
+import pandas as pd
 import json
 import time
+from datetime import datetime
 from pprint import pprint
 
 # Manage exits
@@ -28,21 +30,62 @@ def manage_trade_exits(client):
     # Guard : Exit if no open positions in file
     if len(open_positions_dict) < 1:
         return "complete"
+    
+    # Load trade logger (csv file)
+    try:
+        trade_logger = pd.read_csv("trade_logger.csv")
+    except:
+        trade_logger = {"pair": [],
+                        "market": [],
+                        "entry_date": [],
+                        "position_side": [],
+                        "entry_price": [],
+                        "position_size": [],
+                        "exit_date": [],
+                        "exit_signal": [],
+                        "total_pnl": []
+                        }
+        trade_logger = pd.DataFrame(trade_logger)
 
-    # Get all open positions per trading platform
+    # Get all open positions per trading platform (including current Pnl)
     exchange_pos = client.private.get_positions(status="OPEN")
     all_exc_pos = exchange_pos.data["positions"]
     markets_live = []
+    unrealized_pnl = []
+    realized_pnl = []
+    entry_price = []
+    entry_date = []
+    position_size = []
+    position_side = []
+
     for p in all_exc_pos:
+        entry_price.append(float(p["entryPrice"]))
+        position_size.append(abs(float(p["size"])))
+        position_side.append(p["side"])
+        entry_date.append(p["createdAt"])
         markets_live.append(p["market"])
-    
+        unrealized_pnl.append(float(p["unrealizedPnl"]))
+        realized_pnl.append(float(p["realizedPnl"]))
+
+    dict_markets_pnl = {"market": markets_live,
+                        "entry_date": entry_date,
+                        "position_side": position_side,
+                        "entry_price": entry_price,
+                        "position_size": position_size,
+                        "unrealized_pnl": unrealized_pnl,
+                        "realized_pnl": realized_pnl
+                        }
+    df_markets_pnl = pd.DataFrame(dict_markets_pnl)
+    df_markets_pnl["position_initial_value"] = df_markets_pnl["entry_price"]*df_markets_pnl["position_size"]
+    df_markets_pnl["total_pnl"]=df_markets_pnl["unrealized_pnl"]+df_markets_pnl["realized_pnl"]
+
     # Protect API
     time.sleep(0.5)
 
     # Check all saved positions match older record
     # Exit trade according to any exit trade rules
     for position in open_positions_dict:
-        
+
         # Initialize is_close_trigger
         is_close = False
 
@@ -64,7 +107,7 @@ def manage_trade_exits(client):
         order_market_m1 = order_m1.data["order"]["market"]
         order_size_m1 = float(order_m1.data["order"]["size"])
         order_side_m1 = order_m1.data["order"]["side"]
-
+       
         # Protect API
         time.sleep(0.5)
 
@@ -104,7 +147,7 @@ def manage_trade_exits(client):
             z_score_traded = position["z_score"]
             if len(series_1) > 0 and len(series_1) == len(series_2):
                 spread = series_1 - (hedge_ratio * series_2)
-                z_score_current = calculate_zcore(spread).values.tolist()[-1]
+                z_score_current = calculate_zscore(spread).values.tolist()[-1]
             
             # Determine trigger
             z_score_level_check = abs(z_score_current) >= abs(z_score_traded)
@@ -113,8 +156,52 @@ def manage_trade_exits(client):
             # Close trade
             if z_score_level_check and z_score_cross_check:
 
+                #Keep exit signal for trade logger
+                exit_signal="Zscore"
+
                 # Initiate close trigger
                 is_close = True
+
+                #Print closing signal
+                print(f"Z-score closing signal triggered for position : {position_market_m1}-{position_market_m2}")
+            
+        #Trigger close based on Stop loss and Take profit
+
+        ##Compute pair current total pnl
+        df_m1 = df_markets_pnl.loc[df_markets_pnl["market"] == order_market_m1]
+        df_m1 = df_m1.reset_index(drop=True)
+        df_m2 = df_markets_pnl.loc[df_markets_pnl["market"] == order_market_m2]
+        df_m2 = df_m2.reset_index(drop=True)
+        current_pnl = df_m1["total_pnl"].values.tolist()[0]+df_m2["total_pnl"].values.tolist()[0]
+        position_initial_value = df_m1["position_initial_value"].values.tolist()[0]+df_m2["position_initial_value"].values.tolist()[0]
+
+        ##Check if stop loss is triggered
+        stop_loss_check = ((position_initial_value+current_pnl)/position_initial_value) <= (1-(STOP_LOSS/100))
+
+        if stop_loss_check and is_close==False:
+
+            #Keep exit signal for trade logger
+            exit_signal="SL"
+
+            # Initiate close trigger
+            is_close = True
+
+            #Print closing signal
+            print(f"Stop loss triggered for position : {position_market_m1}-{position_market_m2}")
+
+        ##Check if take profit is triggered
+        take_profit_check = ((position_initial_value+current_pnl)/position_initial_value) >= (1+(TAKE_PROFIT/100))
+
+        if take_profit_check and is_close==False:
+
+            #Keep exit signal for trade logger
+            exit_signal="TP"
+
+            # Initiate close trigger
+            is_close = True
+
+            #Print closing signal
+            print(f"Take profit triggered for position : {position_market_m1}-{position_market_m2}")
         
         ###
         # Add any other close logic you want here
@@ -123,6 +210,13 @@ def manage_trade_exits(client):
 
         # Close positions if triggered
         if is_close:
+
+            #Temporary file to add to trade logger
+            pair = position_market_m1+"--"+position_market_m2
+            df_m1.loc[0,"pair"] = pair 
+            df_m2.loc[0,"pair"] = pair 
+            df_m1.loc[0,"exit_signal"] = exit_signal 
+            df_m2.loc[0,"exit_signal"] = exit_signal
 
             # Determine side - m1
             side_m1 = "SELL"
@@ -167,6 +261,8 @@ def manage_trade_exits(client):
                 print(close_order_m1["order"]["id"])
                 print(">>> Closing <<<")
 
+                df_m1.loc[0,"exit_date"]=datetime.now().isoformat()
+
                 # Protect API
                 time.sleep(1)
 
@@ -185,10 +281,17 @@ def manage_trade_exits(client):
 
                 print(close_order_m2["order"]["id"])
                 print(">>> Closing <<<")
+
+                df_m2.loc[0,"exit_date"]=datetime.now().isoformat()
             
             except Exception as e:
                 print(f"Exit failed for {position_market_m1} with {position_market_m2}")
                 save_output.append(position) 
+            
+            #Updating trade logger
+            df_temp = pd.concat([df_m1[["pair","market","entry_date","position_side","entry_price","position_size","exit_date","exit_signal","total_pnl"]],
+                                 df_m2[["pair","market","entry_date","position_side","entry_price","position_size","exit_date","exit_signal","total_pnl"]]])
+            trade_logger = pd.concat([trade_logger,df_temp])
 
         # Keep record of items and save
         else:
@@ -198,6 +301,11 @@ def manage_trade_exits(client):
     print(f"{len(save_output)} Items remaining. Saving file...")
     with open("bot_agents.json", "w") as f:
         json.dump(save_output, f)
+
+    #Save updated trade logger
+    print("Saving trade logger...")
+    trade_logger = trade_logger.reset_index(drop=True)
+    trade_logger.to_csv("trade_logger.csv",index=False)
 
 
 

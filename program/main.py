@@ -1,4 +1,6 @@
 from constants import ABORT_ALL_POSITIONS, FIND_COINTEGRATED, PLACE_TRADES, MANAGE_EXITS
+import pandas as pd
+from datetime import datetime, timedelta
 from func_connections import connect_dydx
 from func_private import abort_all_positions
 from func_public import construct_market_prices
@@ -33,6 +35,24 @@ if __name__ == "__main__":
             exit(1)
     
     # Find Cointegrated Pairs
+
+    ##Checking if we have to reset cointegrated pairs
+    if FIND_COINTEGRATED==False:
+        try:
+            time_calc_coint = pd.read_csv("coint_calc_time.csv")
+            time_calc_coint = time_calc_coint["date"].values.tolist()[-1]
+            time_calc_coint = pd.to_datetime(time_calc_coint ,format='%Y-%m-%d %H:%M:%S.%f')
+            current_time = datetime.now()
+            delta = current_time-time_calc_coint
+            delta = delta.total_seconds()/3600
+            ##We reset cointegrated pairs every 12 hours
+            if delta>=12:
+                FIND_COINTEGRATED = True 
+            else:
+                FIND_COINTEGRATED = False
+        except:
+           FIND_COINTEGRATED = True
+
     if FIND_COINTEGRATED:
 
         # Construct Market Prices

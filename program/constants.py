@@ -5,10 +5,10 @@ from decouple import config
 MODE = "DEVELOPMENT"
 
 # Close all open positions and orders
-ABORT_ALL_POSITIONS = True
+ABORT_ALL_POSITIONS = False
 
 # Find Cointegrated Pairs
-FIND_COINTEGRATED = True
+FIND_COINTEGRATED = False
 
 # Manage exits
 MANAGE_EXITS = True
@@ -22,11 +22,17 @@ RESOLUTION = "1HOUR"
 # Stats Window
 WINDOW = 21
 
+#Stop Loss and Take profit (in percentage)
+STOP_LOSS = 1.00
+TAKE_PROFIT = 1.50
+
 # Thresholds - Opening
+MAX_PVALUE = 0.05
 MAX_HALF_LIFE = 24
+MIN_ZERO_CROSSING = 10
 ZCORE_THRESH = 1.5
 USD_PER_TRADE = 50
-USD_MIN_COLLATERAL = 1880
+USD_MIN_COLLATERAL = 1800
 
 # Thresholds - Closing
 CLOSE_AT_ZCORE_CROSS = True

@@ -166,7 +166,7 @@ class BotAgent:
             
         # Ensure order is live before processing
         order_status_m2 = self.check_order_status_by_id(self.order_dict["order_id_m2"])
-
+        
         # Guard : Abort if order failed
         if order_status_m2 != "live":
             self.order_dict["pair_status"] = "ERROR"
@@ -208,7 +208,8 @@ class BotAgent:
 
                 # ABORT
                 exit(1)
-
+            return self.order_dict
+        
         #Return success result
         else:
             self.order_dict["pair_status"] = "LIVE"

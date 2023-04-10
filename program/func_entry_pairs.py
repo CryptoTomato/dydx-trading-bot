@@ -1,7 +1,7 @@
 from constants import ZCORE_THRESH, USD_PER_TRADE, USD_MIN_COLLATERAL, TOKEN_FACTOR_10
 from func_utils import format_number
 from func_public import get_candles_recent
-from func_cointegration import calculate_zcore
+from func_cointegration import calculate_zscore
 from func_private import is_open_positions
 from func_bot_agent import BotAgent
 import pandas as pd
@@ -53,7 +53,7 @@ def open_positions(client):
         # Get ZScore
         if len(series_1) > 0 and len(series_1) == len(series_2):
             spread = series_1 - (hedge_ratio * series_2)
-            z_score = calculate_zcore(spread).values.tolist()[-1]
+            z_score = calculate_zscore(spread).values.tolist()[-1]
 
             # Establish if potential trade
             if abs(z_score) >= ZCORE_THRESH:

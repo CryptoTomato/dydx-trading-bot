@@ -1,0 +1,3 @@
+pair,market,entry_date,position_side,entry_price,position_size,exit_date,exit_signal,total_pnl
+FIL-USD--NEAR-USD,FIL-USD,2023-04-09T22:34:33.398Z,LONG,5.8,8.6,2023-04-10T22:24:59.686886,Zscore,2.478008
+FIL-USD--NEAR-USD,NEAR-USD,2023-04-09T22:34:52.381Z,SHORT,2.03289,24.6,2023-04-10T22:25:01.723048,Zscore,0.072693
