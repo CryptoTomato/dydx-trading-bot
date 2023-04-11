@@ -27,7 +27,10 @@ class BotAgent:
             accept_failsafe_base_price,
             z_score,
             half_life,
-            hedge_ratio
+            hedge_ratio,
+            coint_pvalue,
+            zero_crossing
+
         ):
 
         # Initialize class variables
@@ -44,15 +47,19 @@ class BotAgent:
         self.z_score = z_score
         self.half_life = half_life
         self.hedge_ratio = hedge_ratio
+        self.coint_pvalue = coint_pvalue
+        self.zero_crossing = zero_crossing
 
         # Initialize output variables
         # Pair status options are FAILED, LIVE, CLOSE, ERROR
         self.order_dict = {
             "market_1" : market_1,
             "market_2" : market_2,
+            "coint_pvalue" : coint_pvalue,
             "hedge_ratio" : hedge_ratio,
             "z_score" : z_score,
             "half_life" : half_life,
+            "zero_crossing" : zero_crossing,
             "order_id_m1" : "",
             "order_m1_size" : base_size,
             "order_m1_side" : base_side,

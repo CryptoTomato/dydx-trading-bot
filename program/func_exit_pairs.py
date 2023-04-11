@@ -41,7 +41,12 @@ def manage_trade_exits(client):
                         "position_side": [],
                         "entry_price": [],
                         "position_size": [],
+                        "entry_zscore": [],
+                        "coint_pvalue": [],
+                        "half_life": [],
+                        "zero_crossing": [],
                         "exit_date": [],
+                        "exit_zscore": [],
                         "exit_signal": [],
                         "total_pnl": []
                         }
@@ -98,6 +103,12 @@ def manage_trade_exits(client):
         position_market_m2 = position["market_2"]
         position_size_m2 = float(position["order_m2_size"])
         position_side_m2 = position["order_m2_side"]
+
+        #Get additional informations about the position
+        position_coint_pvalue = position["coint_pvalue"]
+        position_half_life = position["half_life"]
+        position_zero_crossing = position["zero_crossing"]
+        position_zscore = position["z_score"]
 
         # Protect API
         time.sleep(0.5)
@@ -217,6 +228,16 @@ def manage_trade_exits(client):
             df_m2.loc[0,"pair"] = pair 
             df_m1.loc[0,"exit_signal"] = exit_signal 
             df_m2.loc[0,"exit_signal"] = exit_signal
+            df_m1.loc[0,"entry_zscore"] = position_zscore
+            df_m2.loc[0,"entry_zscore"] = position_zscore
+            df_m1.loc[0,"coint_pvalue"] = position_coint_pvalue
+            df_m2.loc[0,"coint_pvalue"] = position_coint_pvalue
+            df_m1.loc[0,"half_life"] = position_half_life
+            df_m2.loc[0,"half_life"] = position_half_life
+            df_m1.loc[0,"zero_crossing"] = position_zero_crossing
+            df_m2.loc[0,"zero_crossing"] = position_zero_crossing
+            df_m1.loc[0,"exit_zscore"] = z_score_current
+            df_m2.loc[0,"exit_zscore"] = z_score_current
 
             # Determine side - m1
             side_m1 = "SELL"
@@ -289,8 +310,10 @@ def manage_trade_exits(client):
                 save_output.append(position) 
             
             #Updating trade logger
-            df_temp = pd.concat([df_m1[["pair","market","entry_date","position_side","entry_price","position_size","exit_date","exit_signal","total_pnl"]],
-                                 df_m2[["pair","market","entry_date","position_side","entry_price","position_size","exit_date","exit_signal","total_pnl"]]])
+            df_temp = pd.concat([df_m1[["pair","market","entry_date","position_side","entry_price","position_size","entry_zscore","coint_pvalue",
+                                        "half_life","zero_crossing","exit_date","exit_zscore","exit_signal","total_pnl"]],
+                                 df_m2[["pair","market","entry_date","position_side","entry_price","position_size","entry_zscore","coint_pvalue",
+                                        "half_life","zero_crossing","exit_date","exit_zscore","exit_signal","total_pnl"]]])
             trade_logger = pd.concat([trade_logger,df_temp])
 
         # Keep record of items and save

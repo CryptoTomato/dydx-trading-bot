@@ -45,6 +45,8 @@ def open_positions(client):
         quote_market = row["quote_market"]
         hedge_ratio = row["hedge_ratio"]
         half_life = row["half_life"]
+        coint_pvalue = row["p_value"]
+        zero_crossing = row["zero_crossing"]
 
         # Get prices
         series_1 = get_candles_recent(client, base_market)
@@ -134,7 +136,9 @@ def open_positions(client):
                             accept_failsafe_base_price=accept_failsafe_base_price,
                             z_score=z_score,
                             half_life=half_life,
-                            hedge_ratio=hedge_ratio
+                            hedge_ratio=hedge_ratio,
+                            coint_pvalue=coint_pvalue,
+                            zero_crossing=zero_crossing
                         )
 
                         # Open Trades
