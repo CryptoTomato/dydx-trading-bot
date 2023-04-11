@@ -33,7 +33,6 @@ def open_positions(client):
         for p in open_positions_dict:
             bot_agents.append(p)
 
-        pprint(bot_agents)
     except:
         bot_agents = []
 
