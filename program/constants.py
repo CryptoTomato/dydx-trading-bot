@@ -23,7 +23,7 @@ RESOLUTION = "1HOUR"
 WINDOW = 21
 
 #Stop Loss and Take profit (in percentage)
-STOP_LOSS = 2.50
+STOP_LOSS = 1.25
 TAKE_PROFIT = 2.50
 
 # Thresholds - Opening
