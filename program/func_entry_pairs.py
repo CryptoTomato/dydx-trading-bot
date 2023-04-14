@@ -154,8 +154,11 @@ def open_positions(client):
                             print("Trade status: Live")
                             print("---")
                         
-    # Save agents
+                        # Save agents
+                        if len(bot_agents) > 0:
+                            with open("bot_agents.json", "w") as f:
+                                json.dump(bot_agents, f)
+
+    #Print success
     print(f"Success: Manage open trades checked")
-    if len(bot_agents) > 0:
-        with open("bot_agents.json", "w") as f:
-            json.dump(bot_agents, f)
+
