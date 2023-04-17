@@ -24,7 +24,7 @@ WINDOW = 21
 
 #Stop Loss and Take profit (in percentage)
 STOP_LOSS = 1.25
-TAKE_PROFIT = 2.50
+TAKE_PROFIT = 1.75
 
 # Thresholds - Opening
 MAX_PVALUE = 0.05
