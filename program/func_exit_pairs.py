@@ -103,7 +103,7 @@ def manage_trade_exits(client):
             position_size_extra = df_p["position_size"].values.tolist()[0]
             # Determine side 
             side_extra = "SELL"
-            if position_side_extra == "SELL":
+            if position_side_extra == "SHORT":
                 side_extra = "BUY"
         # Get markets for reference of tick size
             markets = client.public.get_markets().data
