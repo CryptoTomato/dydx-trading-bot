@@ -87,6 +87,56 @@ def manage_trade_exits(client):
     # Protect API
     time.sleep(0.5)
 
+    # Check all current positions are in the JSON file
+    # Exit positions that are not in the JSON file
+    markets_saved = []
+    for p in open_positions_dict:
+        markets_saved.append(p["market_1"])
+        markets_saved.append(p["market_2"])
+    for p in all_exc_pos:
+        p_market = p["market"]
+        if p_market not in markets_saved:
+        # Get infos about the position we have to close
+            df_p = df_markets_pnl.loc[df_markets_pnl["market"] == p_market]
+            position_market_extra = df_p["market"].values.tolist()[0]
+            position_side_extra = df_p["position_side"].values.tolist()[0]
+            position_size_extra = df_p["position_size"].values.tolist()[0]
+            # Determine side 
+            side_extra = "SELL"
+            if position_side_extra == "SELL":
+                side_extra = "BUY"
+        # Get markets for reference of tick size
+            markets = client.public.get_markets().data
+        # Get last price 
+            series_extra = get_candles_recent(client, position_market_extra)
+            last_price = float(series_extra[-1])
+            accept_price_extra = last_price * 1.05 if side_extra == "BUY" else last_price * 0.95
+            tick_size_extra = markets["markets"][position_market_extra]["tickSize"]
+            step_size_extra = markets["markets"][position_market_extra]["stepSize"]
+            accept_price_extra = format_number(accept_price_extra, tick_size_extra)
+            size_extra = format_number(position_size_extra, step_size_extra)
+
+            # Close extra position
+            try:
+
+                print(">>> Closing extra position <<<")
+                print(f"Closing position for {position_market_extra}")
+
+                close_order_extra = place_market_order(
+                    client,
+                    market=position_market_extra,
+                    side=side_extra,
+                    size=size_extra,
+                    price=accept_price_extra,
+                    reduce_only=True
+                )
+
+                # Protect API
+                time.sleep(0.5)
+            
+            except Exception as e:
+                print(f"Exit failed for extra position: {position_market_extra}")
+
     # Check all saved positions match older record
     # Exit trade according to any exit trade rules
     for position in open_positions_dict:
@@ -244,7 +294,7 @@ def manage_trade_exits(client):
             if position_side_m1 == "SELL":
                 side_m1 = "BUY"
             
-             # Determine side - m1
+            # Determine side - m2
             side_m2 = "SELL"
             if position_side_m2 == "SELL":
                 side_m2 = "BUY"
